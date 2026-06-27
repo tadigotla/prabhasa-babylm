@@ -98,12 +98,28 @@
 
 ## 5. Supervision wiring (reuse F3 aux-head path)
 
-- [ ] 5.1 Feed transferred gold roles through `RoleStreamPacker` into the existing
-      auxiliary role-prediction head; confirm token alignment in lockstep.
-- [ ] 5.2 Assert mask-selection probabilities are unchanged vs. baseline (no
-      `structured_masking` mask-prob edits).
-- [ ] 5.3 Disabled-flag regression test: enabled-off run is byte-identical to the
-      matched baseline (guards the F8 "inert but looks wired" failure).
+Scoping found the training side is already generic — the F3 aux head, loss, and
+`RoleStreamPacker` consume a precomputed `uint8` role `.bin`; no model/loss/loop
+changes are needed. Work is on the *data* side: produce a **gold** role stream.
+
+- [x] 5.0 `EnglishFrameRealizer.word_roles(frame, voice)` — per-surface-word
+      gold roles (head→kāraka, function words→`separator`), via the shared
+      `_chunks`; realize() refactored onto it (27 tests).
+- [x] 5.1 `contrast_corpus.py`: `WX_TO_SHABDABODHA` + `wx_role_id`,
+      `sentence_role_ids` (reuses `align_pieces_to_role_ids`), `build_contrast_corpus`
+      (lines + flat role-id stream, EOS role, alignment invariant
+      `len(roles)==tokens+lines`), and `shuffle_roles` (ADR shuffled-role control).
+- [x] 5.2 Confound-removal **measured**: on the committed `spm.model`, every gold
+      kāraka lands on its head piece (`TestRealTokenizerAlignment`) — ~0% residual,
+      unlike the spaCy path. No `structured_masking` import anywhere (mask path
+      untouched, by construction — the dead F8 socket stays retired).
+- [x] 5.3 Aux-wiring contract test (`test_contrast_aux_wiring.py`): gold stream →
+      `RoleStreamPacker` → `ShabdabodhaHead` → `shabdabodha_aux_loss` gives a
+      finite loss that responds to the labels. Lazy-imported spaCy out of
+      `shabdabodha_target` so the label set imports without it.
+- [ ] 5.4 (run-prep, bleeds into task 6) `.bin`-writing script + **mixed-corpus**
+      assembly (BabyLM + contrast lines; `none` on BabyLM tokens) per ADR Option B,
+      and the `train_submission_model` flags pointing at the gold corpus.
 
 ## 6. Experiments + closure
 

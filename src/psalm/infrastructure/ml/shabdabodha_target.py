@@ -19,8 +19,6 @@ alignment is the planned refinement if noise > 5%.
 
 from __future__ import annotations
 
-from psalm.domain.linguistics.english_karaka_real import parse_and_assign
-
 # 10-class label set (SPEC 0003). 'unknown' (from the parser) maps to 'none'.
 SHABDABODHA_LABELS: dict[str, int] = {
     "karta": 0,
@@ -78,6 +76,10 @@ class ShabdabodhaTargetBuilder:
         First piece of each word = the word's kāraka role; continuation pieces =
         ``separator``. Length matches ``sp.EncodeAsPieces(sentence)``.
         """
+        # Lazy import: spaCy is only needed for the parser-based builder, not for
+        # the label constants / alignment helper this module also exports.
+        from psalm.domain.linguistics.english_karaka_real import parse_and_assign
+
         word_roles = parse_and_assign(sentence, self.nlp)  # [TokenRole(text, role)]
         pieces = self.sp.EncodeAsPieces(sentence)  # type: ignore[attr-defined]
         return align_pieces_to_role_ids(pieces, [tr.role for tr in word_roles])

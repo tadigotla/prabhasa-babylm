@@ -52,6 +52,25 @@ improves English argument-role generalization over a matched baseline.
 **Independent variable.** Presence of gold role-contrast supervision. Everything
 else held equal.
 
+**Training corpus and aux injection (Option B — mixed corpus).** The śābdabodha
+aux loss is computed on the *same* forward pass as MLM (`shabdabodha_head` over the
+MLM hidden states), so the per-token role labels must align with the MLM training
+text. The model therefore trains MLM on **real BabyLM English with the gold
+contrast sentences woven in**, and the aligned role `.bin` carries the **gold
+kāraka roles on the contrast tokens and `none` (class 9) on the BabyLM tokens**.
+This keeps the model competent on real English (so COGS/BLiMP can register an
+effect) while confining the gold role supervision to the contrast slice — the
+"auxiliary supervision on a small set" of D5, not a synthetic pretraining corpus.
+Rationale for the alternatives rejected: a synthetic-only corpus (Option A) never
+exposes the model to real English, so the primary metric sits near floor and the
+test is uninformative. Implementation notes that bind the build: the role `.bin`
+is `uint8`, and the loss `ignore_index` (−100) is not representable in it, so
+BabyLM tokens are labeled `none` (the aux learns "no salient role here") rather
+than hard-ignored; consequently the **contrast fraction must be large enough that
+the `none` class does not drown the role signal** — the contrast:BabyLM mixing
+ratio (and/or contrast oversampling) is a documented task-6 tuning knob, logged
+with each run, not a hidden constant.
+
 **Matched baseline + specificity control.** The contrast arm is compared to:
 1. a **matched baseline** — identical budget, identical aux-head capacity, no
    role-contrast signal; and

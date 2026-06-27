@@ -9,7 +9,13 @@ number/tense agreement, and the gold parse.
 
 from __future__ import annotations
 
-from psalm.domain.data.karaka_frames import DHATUS, NOMINAL_STEMS, OBLIQUE_KARMA, KarakaFrame
+from psalm.domain.data.karaka_frames import (
+    DHATUS,
+    NOMINAL_STEMS,
+    OBLIQUE_KARMA,
+    KarakaFrame,
+    enumerate_frames,
+)
 from psalm.infrastructure.generators.english_frame_realizer import (
     NOUN_GLOSS,
     PARTICIPLE,
@@ -291,3 +297,73 @@ class TestRoleInvariance:
             )
             checked += 1
         assert checked == 60
+
+
+class TestWordRoles:
+    """Per-surface-word roles for the aux role-label stream (task 5 / Option B)."""
+
+    def test_active_word_roles(self) -> None:
+        frame = _frame(
+            _noun(1, "nara", "puM", "eka", "karwA"),
+            _noun(2, "Pala", "napuM", "eka", "karma"),
+            _noun(3, "puswaka", "napuM", "eka", "karaNam"),
+            _verb(4, "KAx1", "varwamAnaH"),
+        )
+        wr = EnglishFrameRealizer().word_roles(frame)
+        assert wr == [
+            ("the", "separator"),
+            ("man", "karwA"),
+            ("eats", "kriyA"),
+            ("the", "separator"),
+            ("fruit", "karma"),
+            ("with", "separator"),
+            ("the", "separator"),
+            ("book", "karaNam"),
+        ]
+
+    def test_passive_word_roles(self) -> None:
+        frame = _frame(
+            _noun(1, "nara", "puM", "eka", "karwA"),
+            _noun(2, "Pala", "napuM", "eka", "karma"),
+            _verb(3, "KAx1", "varwamAnaH"),
+        )
+        wr = EnglishFrameRealizer().word_roles(frame, voice="passive")
+        # "is eaten" → "is"=separator, "eaten"=kriyā; "by the man" → "man"=kartā.
+        assert wr == [
+            ("the", "separator"),
+            ("fruit", "karma"),
+            ("is", "separator"),
+            ("eaten", "kriyA"),
+            ("by", "separator"),
+            ("the", "separator"),
+            ("man", "karwA"),
+        ]
+
+    def test_word_roles_count_matches_text_words(self) -> None:
+        # One role per whitespace word → aligns 1:1 with tokenizer word-starts.
+        realizer = EnglishFrameRealizer()
+        for frame in enumerate_frames(60, seed=2):
+            for voice in ("active", "passive"):
+                out = realizer.realize(frame, voice=voice)
+                wr = realizer.word_roles(frame, voice=voice)
+                if out is None:
+                    assert wr is None
+                    continue
+                assert wr is not None
+                assert len(wr) == len(out.text.split())
+
+    def test_word_roles_heads_match_karaka_parse(self) -> None:
+        # The non-separator word roles equal the sentence's gold noun+verb roles.
+        realizer = EnglishFrameRealizer()
+        frame = _frame(
+            _noun(1, "kanyA", "swrI", "eka", "karwA"),
+            _noun(2, "jala", "napuM", "eka", "karma"),
+            _verb(3, "xfS1", "varwamAnaH"),
+        )
+        out = realizer.realize(frame)
+        wr = realizer.word_roles(frame)
+        assert out is not None and wr is not None
+        heads = [(w, r) for w, r in wr if r != "separator"]
+        # Surface order (word_roles) vs role-grouped order (karaka_parse) differ;
+        # the SET of gold (head, role) pairs is identical.
+        assert sorted(heads) == sorted(out.karaka_parse)

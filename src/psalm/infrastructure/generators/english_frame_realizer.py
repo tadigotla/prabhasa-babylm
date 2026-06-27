@@ -208,10 +208,57 @@ class EnglishFrameRealizer:
         if prepared is None:
             return None
         by_role, nps, verb = prepared
+        chunks = self._chunks(by_role, nps, verb, voice)
+        if chunks is None:
+            return None
+        verb_form = next(text for text, role in chunks if role == "kriyA")
+        parse = self._noun_parse(nps)
+        parse.append((verb_form, "kriyA"))
+        return AnnotatedSentence(
+            text=self._finish([text for text, _ in chunks]),
+            language="en",
+            karaka_parse=tuple(parse),
+            meta=self._meta(voice, verb),
+        )
+
+    def word_roles(self, frame: KarakaFrame, voice: str = "active") -> list[tuple[str, str]] | None:
+        """Per-surface-word ``(word, role)`` sequence for the aux role-label stream.
+
+        One entry per whitespace word, in surface order: the head of each chunk
+        carries its kāraka (WX role name), every other word is ``separator``. The
+        length equals the realized text's word count, so it aligns 1:1 with the
+        tokenizer's word-start pieces (via ``align_pieces_to_role_ids``).
+        """
+        prepared = self._prepare(frame)
+        if prepared is None:
+            return None
+        by_role, nps, verb = prepared
+        chunks = self._chunks(by_role, nps, verb, voice)
+        if chunks is None:
+            return None
+        out: list[tuple[str, str]] = []
+        for text, role in chunks:
+            words = text.split()
+            for i, word in enumerate(words):
+                out.append((word, role if i == len(words) - 1 else "separator"))
+        return out
+
+    def _chunks(
+        self,
+        by_role: dict[str, Word],
+        nps: dict[str, tuple[str, str]],
+        verb: Word,
+        voice: str,
+    ) -> list[tuple[str, str]] | None:
+        """Surface-order ``(chunk, head-role)`` list shared by realize + word_roles.
+
+        Each chunk's role is the kāraka of its head (the chunk's last word); the
+        verb chunk's role is ``kriyA``. ``None`` if the voice does not apply.
+        """
         if voice == "active":
-            return self._realize_active(by_role, nps, verb)
+            return self._active_chunks(by_role, nps, verb)
         if voice == "passive":
-            return self._realize_passive(by_role, nps, verb)
+            return self._passive_chunks(by_role, nps, verb)
         return None
 
     def _oblique_part(self, role: str, voice: str, nps: dict[str, tuple[str, str]]) -> str | None:
@@ -221,40 +268,33 @@ class EnglishFrameRealizer:
             return None
         return construction.preposition + nps[role][0]
 
-    def _realize_active(
+    def _active_chunks(
         self, by_role: dict[str, Word], nps: dict[str, tuple[str, str]], verb: Word
-    ) -> AnnotatedSentence | None:
+    ) -> list[tuple[str, str]] | None:
         subj_role = self._role_in_slot(nps, ACTIVE, "subject")  # kartā
         subj_plural = subj_role is not None and str(by_role[subj_role]["number"]) != "eka"
         verb_form = self._verb_form(verb, subj_plural)
         if verb_form is None:
             return None
         # Surface order: subject, verb, object, then obliques (SVO + PPs).
-        parts: list[str] = []
+        chunks: list[tuple[str, str]] = []
         if subj_role is not None:
-            parts.append(nps[subj_role][0])
-        parts.append(verb_form)
+            chunks.append((nps[subj_role][0], subj_role))
+        chunks.append((verb_form, "kriyA"))
         obj_role = self._role_in_slot(nps, ACTIVE, "object")  # karma
         if obj_role is not None:
-            parts.append(nps[obj_role][0])
+            chunks.append((nps[obj_role][0], obj_role))
         for role in OBLIQUE_ORDER:
             if role in nps:
                 phrase = self._oblique_part(role, ACTIVE, nps)
                 if phrase is None:
                     return None
-                parts.append(phrase)
-        parse = self._noun_parse(nps)
-        parse.append((verb_form, "kriyA"))
-        return AnnotatedSentence(
-            text=self._finish(parts),
-            language="en",
-            karaka_parse=tuple(parse),
-            meta=self._meta("active", verb),
-        )
+                chunks.append((phrase, role))
+        return chunks
 
-    def _realize_passive(
+    def _passive_chunks(
         self, by_role: dict[str, Word], nps: dict[str, tuple[str, str]], verb: Word
-    ) -> AnnotatedSentence | None:
+    ) -> list[tuple[str, str]] | None:
         # The patient takes the subject slot under the passive; no patient → no
         # natural English passive.
         subj_role = self._role_in_slot(nps, PASSIVE, "subject")  # karma
@@ -268,28 +308,23 @@ class EnglishFrameRealizer:
         aux = self._be(subj_plural, str(verb.get("lakara", "")))
         if aux is None:
             return None
-        verb_phrase = f"{aux} {participle}"
-        parts: list[str] = [nps[subj_role][0], verb_phrase]
+        chunks: list[tuple[str, str]] = [
+            (nps[subj_role][0], subj_role),
+            (f"{aux} {participle}", "kriyA"),
+        ]
         agent_role = self._role_in_slot(nps, PASSIVE, "agent")  # kartā → "by …"
         if agent_role is not None:
             phrase = self._oblique_part(agent_role, PASSIVE, nps)
             if phrase is None:
                 return None
-            parts.append(phrase)
+            chunks.append((phrase, agent_role))
         for role in OBLIQUE_ORDER:
             if role in nps:
                 phrase = self._oblique_part(role, PASSIVE, nps)
                 if phrase is None:
                     return None
-                parts.append(phrase)
-        parse = self._noun_parse(nps)
-        parse.append((verb_phrase, "kriyA"))
-        return AnnotatedSentence(
-            text=self._finish(parts),
-            language="en",
-            karaka_parse=tuple(parse),
-            meta=self._meta("passive", verb),
-        )
+                chunks.append((phrase, role))
+        return chunks
 
     def stream(self, n: int, *, seed: int = 0) -> Iterator[AnnotatedSentence]:
         """Yield up to ``n`` gold-annotated English sentences (deterministic by seed)."""
