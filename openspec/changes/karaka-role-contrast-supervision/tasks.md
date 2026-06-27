@@ -117,9 +117,15 @@ changes are needed. Work is on the *data* side: produce a **gold** role stream.
       `RoleStreamPacker` → `ShabdabodhaHead` → `shabdabodha_aux_loss` gives a
       finite loss that responds to the labels. Lazy-imported spaCy out of
       `shabdabodha_target` so the label set imports without it.
-- [ ] 5.4 (run-prep, bleeds into task 6) `.bin`-writing script + **mixed-corpus**
-      assembly (BabyLM + contrast lines; `none` on BabyLM tokens) per ADR Option B,
-      and the `train_submission_model` flags pointing at the gold corpus.
+- [x] 5.4 Mixed-corpus assembly + cache writer. `contrast_corpus.py` adds
+      `corpus_with_roles` / `none_role_lines` / `mix_lines` / `flatten_corpus`
+      (Option B: gold roles on contrast tokens, `none` on background, deterministic
+      interleave). `scripts/build_contrast_cache.py` writes the trainer-ready cache
+      (`english_base.txt`, `english_base.bin` uint16, `shabdabodha_roles_eos.bin`
+      uint8, + shuffled control) with the hard alignment check; smoke-run OK
+      (510 lines / 5049 tokens / 5559 roles, invariant holds). No
+      `train_submission_model` change — its existing `--shabdabodha-aux λ
+      --shabdabodha-roles <gold>.bin` flags consume the cache directly.
 
 ## 6. Experiments + closure
 

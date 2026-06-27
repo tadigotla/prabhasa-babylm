@@ -16,6 +16,10 @@ from psalm.infrastructure.generators.english_frame_realizer import EnglishFrameR
 from psalm.infrastructure.ml.contrast_corpus import (
     WX_TO_SHABDABODHA,
     build_contrast_corpus,
+    corpus_with_roles,
+    flatten_corpus,
+    mix_lines,
+    none_role_lines,
     sentence_role_ids,
     shuffle_roles,
     wx_role_id,
@@ -177,6 +181,46 @@ class TestBuildCorpus:
         )
         lines, _ = build_contrast_corpus([frame], _fake_pieces)
         assert lines == ["The man eats the fruit.", "The fruit is eaten by the man."]
+
+
+class TestMixedCorpus:
+    """Option B: contrast lines (gold roles) mixed into background lines (none)."""
+
+    def test_corpus_with_roles_is_per_line_aligned(self) -> None:
+        pairs = corpus_with_roles(list(enumerate_frames(10, seed=0)), _fake_pieces)
+        assert len(pairs) > 0
+        for text, ids in pairs:
+            assert len(ids) == len(_fake_pieces(text))
+
+    def test_background_lines_are_all_none(self) -> None:
+        none_id = SHABDABODHA_LABELS["none"]
+        pairs = none_role_lines(["the cat sat", "a dog ran"], _fake_pieces)
+        assert pairs[0] == ("the cat sat", [none_id, none_id, none_id])
+        assert all(r == none_id for _, ids in pairs for r in ids)
+
+    def test_mix_is_order_preserving_and_deterministic(self) -> None:
+        contrast = [("c1", [0]), ("c2", [1])]
+        background = [("b1", [9]), ("b2", [9]), ("b3", [9])]
+        mixed = mix_lines(contrast, background, seed=0)
+        assert sorted(t for t, _ in mixed) == ["b1", "b2", "b3", "c1", "c2"]
+        assert mix_lines(contrast, background, seed=0) == mixed  # deterministic
+
+    def test_flatten_appends_eos_role_per_line(self) -> None:
+        sep = SHABDABODHA_LABELS["separator"]
+        lines, roles = flatten_corpus([("x", [0, 1]), ("y", [7])], with_eos_role=True)
+        assert lines == ["x", "y"]
+        assert roles == [0, 1, sep, 7, sep]
+
+    def test_mixed_corpus_keeps_gold_on_contrast_none_on_background(self) -> None:
+        none_id = SHABDABODHA_LABELS["none"]
+        contrast = corpus_with_roles(list(enumerate_frames(5, seed=0)), _fake_pieces)
+        background = none_role_lines(["the cat sat", "a dog ran near the river"], _fake_pieces)
+        lines, roles = flatten_corpus(mix_lines(contrast, background, seed=1))
+        assert len(lines) == len(contrast) + len(background)
+        # Gold (kāraka) roles survive the mix; background contributes only none.
+        karaka_ids = {SHABDABODHA_LABELS[k] for k in ("karta", "karma", "kriya")}
+        assert karaka_ids & set(roles)
+        assert none_id in set(roles)
 
 
 class TestShuffleControl:

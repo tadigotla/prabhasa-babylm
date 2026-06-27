@@ -55,6 +55,74 @@ def sentence_role_ids(pieces: list[str], word_roles: list[tuple[str, str]]) -> l
     return align_pieces_to_role_ids(pieces, role_names)
 
 
+#: One corpus line paired with its per-piece role ids (no EOS role).
+LineRoles = tuple[str, list[int]]
+
+
+def corpus_with_roles(
+    frames: Iterable[KarakaFrame],
+    encode_pieces: Callable[[str], list[str]],
+    *,
+    realizer: EnglishFrameRealizer | None = None,
+) -> list[LineRoles]:
+    """Per-line ``(text, per-piece gold role ids)`` for the contrast corpus.
+
+    Each frame contributes its active and passive members; lines that cannot be
+    realized are skipped. No EOS role is appended here (see :func:`flatten_corpus`).
+    """
+    realize = realizer or EnglishFrameRealizer()
+    out: list[LineRoles] = []
+    for frame in frames:
+        for voice in ("active", "passive"):
+            sentence = realize.realize(frame, voice=voice)
+            word_roles = realize.word_roles(frame, voice=voice)
+            if sentence is None or word_roles is None:
+                continue
+            ids = sentence_role_ids(encode_pieces(sentence.text), word_roles)
+            out.append((sentence.text, ids))
+    return out
+
+
+def none_role_lines(
+    lines: Iterable[str], encode_pieces: Callable[[str], list[str]]
+) -> list[LineRoles]:
+    """Background (e.g. BabyLM) lines labeled entirely ``none`` (ADR-0043 Option B).
+
+    The model still learns MLM on these tokens; the aux head sees ``none`` (no
+    salient role) there, confining role supervision to the contrast slice.
+    """
+    none_id = SHABDABODHA_LABELS["none"]
+    return [(line, [none_id] * len(encode_pieces(line))) for line in lines if line]
+
+
+def mix_lines(
+    contrast: list[LineRoles], background: list[LineRoles], *, seed: int
+) -> list[LineRoles]:
+    """Deterministically interleave contrast + background lines (seeded shuffle)."""
+    combined = [*contrast, *background]
+    order = np.random.default_rng(seed).permutation(len(combined))
+    return [combined[int(i)] for i in order]
+
+
+def flatten_corpus(
+    pairs: list[LineRoles], *, with_eos_role: bool = True
+) -> tuple[list[str], list[int]]:
+    """Flatten per-line pairs into ``(lines, role stream)`` with optional EOS role.
+
+    With ``with_eos_role`` a ``separator`` is appended after each line, matching
+    ``TokenPacker``'s per-line EOS so ``len(roles) == total_tokens + n_lines``.
+    """
+    sep = SHABDABODHA_LABELS["separator"]
+    lines: list[str] = []
+    roles: list[int] = []
+    for text, ids in pairs:
+        lines.append(text)
+        roles.extend(ids)
+        if with_eos_role:
+            roles.append(sep)
+    return lines, roles
+
+
 def build_contrast_corpus(
     frames: Iterable[KarakaFrame],
     encode_pieces: Callable[[str], list[str]],
@@ -62,32 +130,9 @@ def build_contrast_corpus(
     with_eos_role: bool = True,
     realizer: EnglishFrameRealizer | None = None,
 ) -> tuple[list[str], list[int]]:
-    """Realize a gold contrast corpus and its aligned role-label stream.
-
-    For every frame, realize the active and passive members of its contrast set;
-    each yields a text line and its per-piece gold role ids. With
-    ``with_eos_role`` a ``separator`` is appended after each line, matching
-    ``TokenPacker``'s per-line EOS so the role stream stays positionally 1:1 with
-    the trainer's token stream (``len(roles) == total_tokens + n_lines``).
-
-    Returns ``(lines, role_ids)``; ``role_ids`` is one flat list over all lines.
-    """
-    realize = realizer or EnglishFrameRealizer()
-    lines: list[str] = []
-    roles: list[int] = []
-    sep = SHABDABODHA_LABELS["separator"]
-    for frame in frames:
-        for voice in ("active", "passive"):
-            sentence = realize.realize(frame, voice=voice)
-            word_roles = realize.word_roles(frame, voice=voice)
-            if sentence is None or word_roles is None:
-                continue
-            pieces = encode_pieces(sentence.text)
-            roles.extend(sentence_role_ids(pieces, word_roles))
-            if with_eos_role:
-                roles.append(sep)
-            lines.append(sentence.text)
-    return lines, roles
+    """Realize a contrast-only corpus and its aligned role stream (no background)."""
+    pairs = corpus_with_roles(frames, encode_pieces, realizer=realizer)
+    return flatten_corpus(pairs, with_eos_role=with_eos_role)
 
 
 def shuffle_roles(roles: list[int], *, seed: int) -> list[int]:
