@@ -64,10 +64,12 @@
       "6 kārakas realized, 0 collapse-group(s)". The drop-and-log mechanism is
       tested against a synthetic comitative-vs-instrument "with" collapse, so it
       fires when finer roles/pronouns are added later.
-- [ ] 3.4 Wire passive (karmaṇi) into `vidyut_realizer`: thread `prayoga` through
-      `_conjugate`, make `VIBHAKTI_FOR_KARAKA` voice-dependent (kartā→Trtiya,
-      karma→Prathama under Karmani), TDD against verified classical passives.
-      (Contained per gate 1.1; the rest of the realizer is unchanged.)
+- [x] 3.4 Karmaṇi passive wired into `vidyut_realizer`: `voice` threads through
+      `realize`/`_decline`/`_conjugate`; vibhakti is now voice-aware via the
+      shared `construction_index` (`_vibhakti_for`), so kartā→Trtiya and
+      karma→Prathama under Karmani; the verb takes Karmani prayoga and agrees with
+      the patient. TDD against verified classical forms (naraH→nareRa,
+      KAdati→KAdyate). Vidyut installed (0.4.0); 30 prior tests still green.
 
 ## 4. Gold English side (route fork per D5 / gate 1.3)
 
@@ -80,10 +82,11 @@
       recipient "to" / source "from" / locus "in"), with number + tense agreement
       (passive aux agrees with the patient) and a gold `karaka_parse` (WX role
       vocabulary, pure — no parser). 23 tests green, ruff + mypy clean.
-- [~] 4.3 Frame↔EN role-set invariance verified: active & passive realizations of
-      one frame share an identical noun-role set while the surface differs
-      (`TestRoleInvariance`). **Pending:** full SA↔EN cross-check (needs Vidyut
-      installed; this env lacks it) — pairs with task 3.4.
+- [x] 4.3 SA↔EN cross-check done (`test_bilingual_contrast.py`): one frame
+      realized by both realizers shares one gold role inventory, and that
+      inventory is invariant across language × voice (active/passive, over a
+      50-frame stream). Surfaces differ entirely (naraH/nareRa vs "the man"/"by
+      the man") while {karwA, karma, karaNam, kriyā} is constant.
 
 ### Route B — external parallel + alignment (scale-up, deferred until A shows signal)
 - [ ] 4.4 Ingest an external Sanskrit–English parallel corpus (e.g. Itihāsa); TDD

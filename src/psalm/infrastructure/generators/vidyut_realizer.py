@@ -37,6 +37,7 @@ from typing import cast
 
 from psalm.application.data.ports import AnnotatedSentence
 from psalm.domain.data.karaka_frames import AKARMAKA_DHATUS, KarakaFrame, enumerate_frames
+from psalm.domain.linguistics.construction_index import construction_for
 
 Word = dict[str, object]
 
@@ -110,6 +111,21 @@ VIBHAKTI_FOR_KARAKA: dict[str, str] = {
     "aXikaraNam": "Saptami",
     "predicate": "Prathama",
 }
+
+
+def _vibhakti_for(karaka: str, voice: str) -> str | None:
+    """Vibhakti for a kāraka in a voice.
+
+    The six kārakas are sourced from the shared construction index (the single
+    source of truth, so the Sanskrit and English realizers cannot drift); under
+    the karmaṇi passive this shifts kartā → instrumental and karma → nominative.
+    ``predicate`` and ``sambandha`` fall back to the local active-voice map.
+    """
+    construction = construction_for(karaka, voice)
+    if construction is not None:
+        return construction.vibhakti
+    return VIBHAKTI_FOR_KARAKA.get(karaka)
+
 
 #: frame number → vacana name.
 VACANA: dict[str, str] = {"eka": "Eka", "xvi": "Dvi", "bahu": "Bahu"}
@@ -282,7 +298,7 @@ class VidyutFrameRealizer:
             self._vyakarana = prakriya.Vyakarana()
         return self._mod
 
-    def _decline(self, noun: Word) -> str | None:
+    def _decline(self, noun: Word, voice: str = "active") -> str | None:
         p = self._vidyut()
         # Native (expanded-lexicon) frames carry SLP1 + liṅga + nyāp directly and
         # bypass the small WX-keyed STEMS table; legacy frames look up STEMS.
@@ -298,7 +314,7 @@ class VidyutFrameRealizer:
             if entry is None:
                 return None
         karaka = str(noun["karaka"])
-        vibhakti_name = VIBHAKTI_FOR_KARAKA.get(karaka)
+        vibhakti_name = _vibhakti_for(karaka, voice)
         if vibhakti_name is None:
             return None
         vacana_name = VACANA[str(noun["number"])]
@@ -319,7 +335,9 @@ class VidyutFrameRealizer:
         # one correct form (e.g. narAt/narAd); the first is canonical.
         return str(results[0].text)
 
-    def _conjugate(self, verb: Word, vacana_label: str) -> tuple[str | None, tuple[str, ...]]:
+    def _conjugate(
+        self, verb: Word, vacana_label: str, voice: str = "active"
+    ) -> tuple[str | None, tuple[str, ...]]:
         p = self._vidyut()
         # Native frames carry the upadeśa + gaṇa directly; legacy frames look up DHATUS.
         if "aupadeshika" in verb:
@@ -334,9 +352,10 @@ class VidyutFrameRealizer:
         if lakara_name is None:
             return None, ()
         dhatu = p.Dhatu.mula(entry.upadesha, getattr(p.Gana, entry.gana))
+        prayoga = p.Prayoga.Karmani if voice == "passive" else p.Prayoga.Kartari
         args = p.Pada.Tinanta(
             dhatu=dhatu,
-            prayoga=p.Prayoga.Kartari,
+            prayoga=prayoga,
             lakara=getattr(p.Lakara, lakara_name),
             purusha=p.Purusha.Prathama,  # nominal subjects are 3rd person
             vacana=getattr(p.Vacana, VACANA[vacana_label]),
@@ -353,12 +372,14 @@ class VidyutFrameRealizer:
             derivation = tuple(str(step.code) for step in prakriya.history)
         return text, derivation
 
-    def realize(self, frame: KarakaFrame) -> AnnotatedSentence | None:
-        """Realize one frame, or ``None`` if it is invalid / underivable.
+    def realize(self, frame: KarakaFrame, voice: str = "active") -> AnnotatedSentence | None:
+        """Realize one frame in ``voice`` (active | passive), or ``None``.
 
         ``None`` is returned (never a fabricated string) when: the frame violates
         transitivity (akarmaka + karma), a stem/dhātu is outside the verified
-        lexicon, or Vidyut yields no derivation.
+        lexicon, Vidyut yields no derivation, or a karmaṇi passive is requested of
+        a frame with no karma. The gold kāraka parse is voice-invariant — only the
+        surface (the kartā's case, the verb's prayoga) changes.
         """
         if frame_transitivity_violation(frame):
             return None
@@ -368,12 +389,20 @@ class VidyutFrameRealizer:
         if len(verbs) != 1:
             return None
         verb = verbs[0]
-        karta = next((nw for nw in nouns if nw.get("karaka") == "karwA"), None)
-        karta_vacana = str(karta["number"]) if karta else "eka"
+        # The verb agrees with the kartā in the active voice and with the karma
+        # (the new nominative subject) under the karmaṇi passive.
+        if voice == "passive":
+            karma = next((nw for nw in nouns if nw.get("karaka") == "karma"), None)
+            if karma is None:
+                return None
+            agreement_vacana = str(karma["number"])
+        else:
+            karta = next((nw for nw in nouns if nw.get("karaka") == "karwA"), None)
+            agreement_vacana = str(karta["number"]) if karta else "eka"
 
         realized: list[tuple[str, str, int]] = []
         for nw in nouns:
-            surface = self._decline(nw)
+            surface = self._decline(nw, voice)
             if surface is None:
                 return None
             order = self.config.word_order
@@ -381,7 +410,7 @@ class VidyutFrameRealizer:
             rank = order.index(karaka) if karaka in order else len(order)
             realized.append((surface, karaka, rank))
 
-        verb_surface, derivation = self._conjugate(verb, karta_vacana)
+        verb_surface, derivation = self._conjugate(verb, agreement_vacana, voice)
         if verb_surface is None:
             return None
 
@@ -406,7 +435,7 @@ class VidyutFrameRealizer:
             meta={
                 "dhatu": str(verb["dhatu"]),
                 "lakara": str(verb["lakara"]),
-                "prayoga": str(verb.get("prayoga", "karwari")),
+                "prayoga": "karmani" if voice == "passive" else str(verb.get("prayoga", "karwari")),
                 "scheme": "slp1",
                 "sandhi": sandhi_mode,
                 "generator": "vidyut-realizer",

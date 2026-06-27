@@ -158,6 +158,66 @@ def test_enumerated_frames_have_no_transitivity_violations() -> None:
     assert violations == [], f"{len(violations)} akarmaka+karma frames leaked"
 
 
+# --- karmaṇi passive (Sanskrit side of the H1_CONTRAST role contrast) ----------
+
+
+def _transitive_frame(karma_number: str = "eka") -> KarakaFrame:
+    return KarakaFrame(
+        {
+            "words": [
+                _noun(1, "nara", "puM", "eka", "karwA", 3),
+                _noun(2, "Pala", "napuM", karma_number, "karma", 3),
+                _verb(3, "KAx1", "varwamAnaH"),
+            ]
+        },
+        signature=("KAx1", "varwamAnaH", "nara", "eka", "Pala", karma_number),
+    )
+
+
+def test_realize_passive_transitive_gold_parse(realizer) -> None:
+    out = realizer.realize(_transitive_frame(), voice="passive")
+    assert out is not None
+    # kartā → instrumental (nareRa), karma → nominative (Palam), verb → karmaṇi.
+    # The gold roles are identical to the active frame; only the surface moves.
+    assert out.karaka_parse == (
+        ("nareRa", "karwA"),
+        ("Palam", "karma"),
+        ("KAdyate", "kriyA"),
+    )
+    assert out.meta["prayoga"] == "karmani"
+    for token, _role in out.karaka_parse:
+        assert token in out.text
+
+
+def test_passive_verb_agrees_with_patient_number(realizer) -> None:
+    out = realizer.realize(_transitive_frame(karma_number="bahu"), voice="passive")
+    assert out is not None
+    # Passive verb agrees with the patient (the new nominative subject) → plural.
+    assert "KAdyante" in out.text
+
+
+def test_passive_intransitive_returns_none(realizer) -> None:
+    frame = KarakaFrame(
+        {
+            "words": [
+                _noun(1, "bAla", "puM", "eka", "karwA", 2),
+                _verb(2, "gam1", "varwamAnaH"),
+            ]
+        },
+        signature=("gam1", "varwamAnaH", "bAla", "eka", "-", "-"),
+    )
+    # No karma → no karmaṇi passive.
+    assert realizer.realize(frame, voice="passive") is None
+
+
+def test_active_is_unchanged_default(realizer) -> None:
+    # Regression guard: default voice stays active and identical to before.
+    out = realizer.realize(_transitive_frame())
+    assert out is not None
+    assert out.karaka_parse == (("naraH", "karwA"), ("Palam", "karma"), ("KAdati", "kriyA"))
+    assert out.meta["prayoga"] == "karwari"
+
+
 # --- forward sandhi honesty (no fabricated fusions) --------------------------
 
 
