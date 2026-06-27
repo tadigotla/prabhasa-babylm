@@ -1,0 +1,47 @@
+MATRIX START 06:51:48
+### TRAIN baseline s0 06:51:48
+DONE submission: steps=1145 words=3.6M final_loss=4.0049 best_loss=3.5637 wall=3.8min -> runs/contrast_matrix/baseline_s0/elc.pt
+### EVAL baseline s0 06:55:39
+OVERALL BLiMP (PLL): 0.5090  over 6700 pairs
+per-field: {'syntax': 0.515, 'morphology': 0.482, 'syntax_semantics': 0.636, 'semantics': 0.366, 'syntax/semantics': 0.46}
+### TRAIN gold s0 06:59:11
+DONE submission: steps=1145 words=3.6M final_loss=3.8459 best_loss=3.5016 wall=3.8min -> runs/contrast_matrix/gold_s0/elc.pt
+### EVAL gold s0 07:03:04
+OVERALL BLiMP (PLL): 0.5276  over 6700 pairs
+per-field: {'syntax': 0.523, 'morphology': 0.527, 'syntax_semantics': 0.602, 'semantics': 0.439, 'syntax/semantics': 0.48}
+### TRAIN shuffled s0 07:06:39
+DONE submission: steps=1145 words=3.6M final_loss=4.5815 best_loss=4.2092 wall=3.8min -> runs/contrast_matrix/shuffled_s0/elc.pt
+### EVAL shuffled s0 07:10:32
+OVERALL BLiMP (PLL): 0.5290  over 6700 pairs
+per-field: {'syntax': 0.531, 'morphology': 0.513, 'syntax_semantics': 0.61, 'semantics': 0.457, 'syntax/semantics': 0.37}
+### TRAIN baseline s1 07:14:08
+DONE submission: steps=1145 words=3.6M final_loss=3.9981 best_loss=3.5833 wall=3.8min -> runs/contrast_matrix/baseline_s1/elc.pt
+### EVAL baseline s1 07:18:01
+OVERALL BLiMP (PLL): 0.5212  over 6700 pairs
+per-field: {'syntax': 0.524, 'morphology': 0.505, 'syntax_semantics': 0.605, 'semantics': 0.421, 'syntax/semantics': 0.55}
+### TRAIN gold s1 07:21:34
+DONE submission: steps=1145 words=3.6M final_loss=3.8891 best_loss=3.4321 wall=3.8min -> runs/contrast_matrix/gold_s1/elc.pt
+### EVAL gold s1 07:25:27
+OVERALL BLiMP (PLL): 0.5290  over 6700 pairs
+per-field: {'syntax': 0.535, 'morphology': 0.512, 'syntax_semantics': 0.613, 'semantics': 0.446, 'syntax/semantics': 0.35}
+### TRAIN shuffled s1 07:28:59
+DONE submission: steps=1145 words=3.6M final_loss=4.6877 best_loss=4.1508 wall=3.8min -> runs/contrast_matrix/shuffled_s1/elc.pt
+### EVAL shuffled s1 07:32:52
+OVERALL BLiMP (PLL): 0.5145  over 6700 pairs
+per-field: {'syntax': 0.52, 'morphology': 0.503, 'syntax_semantics': 0.632, 'semantics': 0.363, 'syntax/semantics': 0.43}
+### TRAIN baseline s2 07:36:24
+DONE submission: steps=1145 words=3.6M final_loss=3.8824 best_loss=3.5409 wall=3.8min -> runs/contrast_matrix/baseline_s2/elc.pt
+### EVAL baseline s2 07:40:16
+OVERALL BLiMP (PLL): 0.5219  over 6700 pairs
+per-field: {'syntax': 0.527, 'morphology': 0.498, 'syntax_semantics': 0.622, 'semantics': 0.414, 'syntax/semantics': 0.51}
+### TRAIN gold s2 07:43:47
+DONE submission: steps=1145 words=3.6M final_loss=3.8654 best_loss=3.4814 wall=3.8min -> runs/contrast_matrix/gold_s2/elc.pt
+### EVAL gold s2 07:47:41
+OVERALL BLiMP (PLL): 0.5282  over 6700 pairs
+per-field: {'syntax': 0.525, 'morphology': 0.529, 'syntax_semantics': 0.607, 'semantics': 0.419, 'syntax/semantics': 0.54}
+### TRAIN shuffled s2 07:51:15
+DONE submission: steps=1145 words=3.6M final_loss=4.6218 best_loss=4.2340 wall=3.8min -> runs/contrast_matrix/shuffled_s2/elc.pt
+### EVAL shuffled s2 07:55:09
+OVERALL BLiMP (PLL): 0.5012  over 6700 pairs
+per-field: {'syntax': 0.521, 'morphology': 0.467, 'syntax_semantics': 0.617, 'semantics': 0.351, 'syntax/semantics': 0.45}
+MATRIX DONE 07:58:42

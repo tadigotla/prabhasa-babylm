@@ -129,13 +129,22 @@ changes are needed. Work is on the *data* side: produce a **gold** role stream.
 
 ## 6. Experiments + closure
 
-- [ ] 6.1 Run the matched baseline and the `H1_CONTRAST` arm at proxy scale; log
-      coverage (tokens attempted/retained/dropped) per the honesty requirement.
-- [ ] 6.2 Compute targeted-subset contrast + 95% CI vs. threshold; run the
-      shuffled-role specificity control (rule out generic multi-task gain).
-- [ ] 6.3 If threshold missed: run ≥2 documented interventions (alignment quality,
-      coverage/distillation, construction mix) before any null is declared.
-- [ ] 6.4 Report the secondary cross-lingual probe alongside the primary result.
-- [ ] 6.5 Write the finding (positive / marginal / null) + interpretation +
-      Tarka memo (strongest objection to your own result) to the experiment
-      ledger; update the paper section from the finding.
+- [x] 6.1 **Proxy pass run on an NVIDIA L4** (2026-06-27): 3 arms
+      (baseline / gold / shuffled) × 3 seeds, pure MLM + aux, mechanisms off.
+      Mixed corpus 16.7k contrast + 87k BabyLM lines (alignment OK). Pipeline
+      validated end-to-end on GPU for the first time — gold role stream loads into
+      the śābdabodha head and trains. See `results/task6-proxy-finding.md`.
+- [x] 6.2 Targeted-subset contrast + shuffled-role specificity control computed
+      (`results/blimp_jsons/`). **Metric substitution:** COGS-primary not
+      computable (its disc-eval trains its own causal models, not a checkpoint
+      scorer), so BLiMP PLL is the operative readout — documented gap.
+- [~] 6.3 **Finding: preliminary NULL on the mechanism-aligned readout** — gold's
+      small overall edge (+1.09, 3/3 seeds) does **not** appear on the targeted
+      arg-structure/passive/agreement paradigms (−0.42); gold−shuffled +0.67/+1.34
+      (NS). Thresholds not met. **Underpowered & not final:** corpus is a 1.3M-token
+      sample (BLiMP ~chance), n=3. Documented next interventions (≥2 before a final
+      NULL): (1) full-10M rerun off the floor, (2) build COGS-disc-for-MLM scorer.
+- [ ] 6.4 Cross-lingual probe — not run.
+- [x] 6.5 Finding + Tarka memo written (`results/task6-proxy-finding.md`). The
+      Tarka memo notes the gold>baseline-all-seeds + shuffled≈baseline pattern as
+      the strongest objection to the null → why the full-scale rerun is required.
