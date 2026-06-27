@@ -1,0 +1,48 @@
+pools: mix_train=1040 (act 520+pas 520)  test_active=1000  test_passive=324
+baseline_s0: mixed-train -> heldout ACTIVE at=76.0 | heldout PASSIVE at=94.6 (n_pas=648)
+baseline_s1: mixed-train -> heldout ACTIVE at=81.2 | heldout PASSIVE at=96.0 (n_pas=648)
+baseline_s2: mixed-train -> heldout ACTIVE at=80.7 | heldout PASSIVE at=94.9 (n_pas=648)
+baseline_s3: mixed-train -> heldout ACTIVE at=85.1 | heldout PASSIVE at=96.3 (n_pas=648)
+baseline_s4: mixed-train -> heldout ACTIVE at=81.7 | heldout PASSIVE at=94.4 (n_pas=648)
+baseline_s5: mixed-train -> heldout ACTIVE at=77.9 | heldout PASSIVE at=95.1 (n_pas=648)
+baseline_s6: mixed-train -> heldout ACTIVE at=80.8 | heldout PASSIVE at=96.0 (n_pas=648)
+baseline_s7: mixed-train -> heldout ACTIVE at=88.2 | heldout PASSIVE at=93.7 (n_pas=648)
+baseline_s8: mixed-train -> heldout ACTIVE at=82.4 | heldout PASSIVE at=96.5 (n_pas=648)
+gold_s0: mixed-train -> heldout ACTIVE at=90.2 | heldout PASSIVE at=98.3 (n_pas=648)
+gold_s1: mixed-train -> heldout ACTIVE at=87.7 | heldout PASSIVE at=96.9 (n_pas=648)
+gold_s2: mixed-train -> heldout ACTIVE at=89.0 | heldout PASSIVE at=96.9 (n_pas=648)
+gold_s3: mixed-train -> heldout ACTIVE at=88.4 | heldout PASSIVE at=95.5 (n_pas=648)
+gold_s4: mixed-train -> heldout ACTIVE at=87.6 | heldout PASSIVE at=96.9 (n_pas=648)
+gold_s5: mixed-train -> heldout ACTIVE at=87.7 | heldout PASSIVE at=97.5 (n_pas=648)
+gold_s6: mixed-train -> heldout ACTIVE at=85.4 | heldout PASSIVE at=97.4 (n_pas=648)
+gold_s7: mixed-train -> heldout ACTIVE at=82.0 | heldout PASSIVE at=96.8 (n_pas=648)
+gold_s8: mixed-train -> heldout ACTIVE at=85.7 | heldout PASSIVE at=95.2 (n_pas=648)
+shuffled_s0: mixed-train -> heldout ACTIVE at=77.4 | heldout PASSIVE at=96.3 (n_pas=648)
+shuffled_s1: mixed-train -> heldout ACTIVE at=83.2 | heldout PASSIVE at=96.8 (n_pas=648)
+shuffled_s2: mixed-train -> heldout ACTIVE at=84.9 | heldout PASSIVE at=95.7 (n_pas=648)
+shuffled_s3: mixed-train -> heldout ACTIVE at=84.1 | heldout PASSIVE at=96.0 (n_pas=648)
+shuffled_s4: mixed-train -> heldout ACTIVE at=81.7 | heldout PASSIVE at=95.4 (n_pas=648)
+shuffled_s5: mixed-train -> heldout ACTIVE at=81.9 | heldout PASSIVE at=95.2 (n_pas=648)
+shuffled_s6: mixed-train -> heldout ACTIVE at=81.6 | heldout PASSIVE at=94.6 (n_pas=648)
+shuffled_s7: mixed-train -> heldout ACTIVE at=82.2 | heldout PASSIVE at=95.5 (n_pas=648)
+shuffled_s8: mixed-train -> heldout ACTIVE at=84.5 | heldout PASSIVE at=95.1 (n_pas=648)
+
+==============================================================================
+MIXED-VOICE DIAGNOSTIC (train balanced active+passive), agent-vs-theme acc
+==============================================================================
+
+--- held-out PASSIVE (decisive: position decorrelated) ---
+  baseline  95.27   n=9  seeds=[94.6, 96.0, 94.9, 96.3, 94.4, 95.1, 96.0, 93.7, 96.5]
+  gold      96.83   n=9  seeds=[98.3, 96.9, 96.9, 95.5, 96.9, 97.5, 97.4, 96.8, 95.2]
+  shuffled  95.61   n=9  seeds=[96.3, 96.8, 95.7, 96.0, 95.4, 95.2, 94.6, 95.5, 95.1]
+  gold-baseline  +1.56  CI[+0.3,+2.8]  t=2.79  7/9 seeds +
+  gold-shuffled  +1.22  CI[+0.4,+2.1]  t=3.36  8/9 seeds +
+  shuffled-baseline  +0.34  CI[-0.6,+1.3]  t=0.87  6/9 seeds +
+
+--- held-out ACTIVE ---
+  baseline  81.52   n=9  seeds=[76.0, 81.2, 80.7, 85.1, 81.7, 77.9, 80.8, 88.2, 82.4]
+  gold      87.05   n=9  seeds=[90.2, 87.7, 89.0, 88.4, 87.6, 87.7, 85.4, 82.0, 85.7]
+  shuffled  82.36   n=9  seeds=[77.4, 83.2, 84.9, 84.1, 81.7, 81.9, 81.6, 82.2, 84.5]
+  gold-baseline  +5.53  CI[+1.2,+9.8]  t=2.96  8/9 seeds +
+  gold-shuffled  +4.69  CI[+1.9,+7.5]  t=3.90  8/9 seeds +
+  shuffled-baseline  +0.83  CI[-1.5,+3.2]  t=0.82  7/9 seeds +

@@ -1,0 +1,55 @@
+pools: train_active=1600  test_active=1000  test_passive=844
+baseline_s0: A->A at=89.7 3c=86.0 | A->P at=18.4 3c=18.1 (maj_at=50.0, n_at=1688, ntr=3603)
+baseline_s1: A->A at=89.3 3c=85.6 | A->P at=19.7 3c=19.3 (maj_at=50.0, n_at=1688, ntr=3603)
+baseline_s2: A->A at=93.0 3c=89.2 | A->P at=12.1 3c=11.8 (maj_at=50.0, n_at=1688, ntr=3603)
+baseline_s3: A->A at=94.9 3c=90.9 | A->P at=17.4 3c=17.1 (maj_at=50.0, n_at=1688, ntr=3603)
+baseline_s4: A->A at=91.9 3c=87.9 | A->P at=13.9 3c=13.8 (maj_at=50.0, n_at=1688, ntr=3603)
+baseline_s5: A->A at=94.5 3c=90.5 | A->P at=6.2 3c=6.0 (maj_at=50.0, n_at=1688, ntr=3603)
+baseline_s6: A->A at=95.5 3c=92.4 | A->P at=7.1 3c=7.0 (maj_at=50.0, n_at=1688, ntr=3603)
+baseline_s7: A->A at=95.4 3c=93.2 | A->P at=8.0 3c=8.0 (maj_at=50.0, n_at=1688, ntr=3603)
+baseline_s8: A->A at=93.2 3c=89.9 | A->P at=6.0 3c=5.9 (maj_at=50.0, n_at=1688, ntr=3603)
+gold_s0: A->A at=96.9 3c=95.6 | A->P at=6.0 3c=5.9 (maj_at=50.0, n_at=1688, ntr=3603)
+gold_s1: A->A at=97.2 3c=95.2 | A->P at=8.7 3c=8.5 (maj_at=50.0, n_at=1688, ntr=3603)
+gold_s2: A->A at=97.2 3c=95.8 | A->P at=6.6 3c=6.5 (maj_at=50.0, n_at=1688, ntr=3603)
+gold_s3: A->A at=97.3 3c=95.6 | A->P at=14.4 3c=14.1 (maj_at=50.0, n_at=1688, ntr=3603)
+gold_s4: A->A at=97.2 3c=95.9 | A->P at=6.6 3c=6.5 (maj_at=50.0, n_at=1688, ntr=3603)
+gold_s5: A->A at=95.4 3c=93.7 | A->P at=3.3 3c=3.2 (maj_at=50.0, n_at=1688, ntr=3603)
+gold_s6: A->A at=95.0 3c=93.5 | A->P at=11.4 3c=11.1 (maj_at=50.0, n_at=1688, ntr=3603)
+gold_s7: A->A at=93.5 3c=92.0 | A->P at=13.5 3c=13.2 (maj_at=50.0, n_at=1688, ntr=3603)
+gold_s8: A->A at=96.0 3c=94.4 | A->P at=10.1 3c=9.9 (maj_at=50.0, n_at=1688, ntr=3603)
+shuffled_s0: A->A at=93.1 3c=90.4 | A->P at=20.3 3c=19.9 (maj_at=50.0, n_at=1688, ntr=3603)
+shuffled_s1: A->A at=92.7 3c=87.9 | A->P at=23.2 3c=22.8 (maj_at=50.0, n_at=1688, ntr=3603)
+shuffled_s2: A->A at=93.8 3c=90.7 | A->P at=7.8 3c=7.8 (maj_at=50.0, n_at=1688, ntr=3603)
+shuffled_s3: A->A at=94.0 3c=91.0 | A->P at=19.1 3c=18.8 (maj_at=50.0, n_at=1688, ntr=3603)
+shuffled_s4: A->A at=94.7 3c=91.0 | A->P at=8.4 3c=8.2 (maj_at=50.0, n_at=1688, ntr=3603)
+shuffled_s5: A->A at=94.4 3c=92.4 | A->P at=2.8 3c=2.8 (maj_at=50.0, n_at=1688, ntr=3603)
+shuffled_s6: A->A at=91.8 3c=87.3 | A->P at=22.0 3c=21.6 (maj_at=50.0, n_at=1688, ntr=3603)
+shuffled_s7: A->A at=95.4 3c=92.6 | A->P at=9.3 3c=9.1 (maj_at=50.0, n_at=1688, ntr=3603)
+shuffled_s8: A->A at=95.4 3c=93.5 | A->P at=10.6 3c=10.4 (maj_at=50.0, n_at=1688, ntr=3603)
+
+==============================================================================
+CONSTRUCTION-INVARIANCE (train ACTIVE -> test PASSIVE), agent-vs-theme acc
+==============================================================================
+
+--- active->PASSIVE (crux) : agent-vs-theme ---
+  baseline  12.09   n=9  seeds=[18.4, 19.7, 12.1, 17.4, 13.9, 6.2, 7.1, 8.0, 6.0]
+  gold      8.95   n=9  seeds=[6.0, 8.7, 6.6, 14.4, 6.6, 3.3, 11.4, 13.5, 10.1]
+  shuffled  13.72   n=9  seeds=[20.3, 23.2, 7.8, 19.1, 8.4, 2.8, 22.0, 9.3, 10.6]
+  gold-baseline  -3.14  CI[-8.2,+2.0]  t=-1.42  3/9 seeds +
+  gold-shuffled  -4.77  CI[-10.0,+0.4]  t=-2.11  2/9 seeds +
+  shuffled-baseline  +1.63  CI[-3.1,+6.3]  t=0.80  6/9 seeds +
+
+--- active->active (ceiling) : agent-vs-theme ---
+  baseline  93.03   n=9  seeds=[89.7, 89.3, 93.0, 94.9, 91.9, 94.5, 95.5, 95.4, 93.2]
+  gold      96.16   n=9  seeds=[96.9, 97.2, 97.2, 97.3, 97.2, 95.4, 95.0, 93.5, 96.0]
+  shuffled  93.90   n=9  seeds=[93.1, 92.7, 93.8, 94.0, 94.7, 94.4, 91.8, 95.4, 95.4]
+  gold-baseline  +3.13  CI[+0.6,+5.7]  t=2.82  7/9 seeds +
+  gold-shuffled  +2.26  CI[+0.7,+3.8]  t=3.34  8/9 seeds +
+  shuffled-baseline  +0.87  CI[-0.9,+2.7]  t=1.12  6/9 seeds +
+
+--- invariance gap = (active->active) - (active->passive), agent-vs-theme (lower = more invariant) ---
+  baseline  +80.94   seeds=[71.3, 69.6, 80.9, 77.5, 78.0, 88.3, 88.3, 87.4, 87.2]
+  gold      +87.20   seeds=[90.9, 88.4, 90.6, 82.9, 90.5, 92.1, 83.6, 79.9, 85.9]
+  shuffled  +80.18   seeds=[72.8, 69.5, 86.0, 74.9, 86.2, 91.6, 69.8, 86.1, 84.8]
+  (baseline_gap - gold_gap) -6.27  CI[-13.8,+1.2]  t=-1.93  3/9 seeds +  (positive => gold more invariant)
+  (shuffled_gap - gold_gap) -7.02  CI[-13.5,-0.5]  t=-2.48  1/9 seeds +  (positive => gold more invariant)
